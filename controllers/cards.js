@@ -26,14 +26,14 @@ const deleteCard = (req, res) => {
   card.findByIdAndDelete(cardId)
     .then((deletedCard) => {
       if (!deletedCard) {
-        return res.status(400).send({ message: 'Карточка с указанным _id не найдена' });
+        return res.status(404).send({ message: 'Карточка с указанным _id не найдена' });
       }
 
       return res.status(200).json({ message: 'Карточка удалена' });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(404).send({ message: 'Передан несуществующий _id карточки' });
+        return res.status(400).send({ message: 'Передан несуществующий _id карточки' });
       }
       if (err.name === 'ValidationError') {
         return res.status(400).send({ message: 'Переданы некорректные данные для постановки/снятии лайка.' });
@@ -53,12 +53,12 @@ const likeCard = (req, res) => {
       if (getLikeCard) {
         res.status(200).json(getLikeCard);
       } else {
-        res.status(400).json({ message: 'Карточка с указанным _id не найдена' });
+        res.status(404).json({ message: 'Карточка с указанным _id не найдена' });
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(404).send({ message: 'Передан несуществующий _id карточки' });
+        return res.status(400).send({ message: 'Передан несуществующий _id карточки' });
       }
       if (err.name === 'ValidationError') {
         return res.status(400).send({ message: 'Переданы некорректные данные для постановки/снятии лайка.' });
@@ -78,12 +78,12 @@ const dislikeCard = (req, res) => {
       if (getDislikeCard) {
         res.status(200).json(getDislikeCard);
       } else {
-        res.status(400).json({ message: 'Карточка с указанным _id не найдена' });
+        res.status(404).json({ message: 'Карточка с указанным _id не найдена' });
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(404).send({ message: 'Передан несуществующий _id карточки' });
+        return res.status(400).send({ message: 'Передан несуществующий _id карточки' });
       }
       if (err.name === 'ValidationError') {
         return res.status(400).send({ message: 'Переданы некорректные данные для постановки/снятии лайка.' });
