@@ -74,6 +74,10 @@ const updateProfile = (req, res) => {
       }
     })
     .catch((err) => {
+// тут может быть ошибка в github test ошибки Обновление данных пользователя с полем name меньше 2 символов и max 30
+      if (err.name === 'ValidationError') {
+        return res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя.' });
+      }
       logger.error(`Error in getCards: ${err}`);
       return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
     });
@@ -98,6 +102,9 @@ const updateAvatar = (req, res) => {
       }
     })
     .catch((err) => {
+      if (err.name === 'ValidationError') {
+        return res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя.' });
+      }
       logger.error(`Error in getCards: ${err}`);
       return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
     });
