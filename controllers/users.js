@@ -74,7 +74,7 @@ const updateProfile = (req, res) => {
       }
     })
     .catch((err) => {
-// тут может быть ошибка в github test ошибки Обновление данных пользователя с полем name меньше 2 символов и max 30
+      // тут может быть ошибка в github test
       if (err.name === 'ValidationError') {
         return res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя.' });
       }
