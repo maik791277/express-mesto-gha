@@ -14,7 +14,7 @@ const getUserById = (req, res) => {
   user.findById(userId)
     .then((getUserId) => {
       if (!getUserId) {
-        return res.status(404).json({ error: 'Пользователь по указанному _id не найден' });
+        return res.status(404).json({ message: 'Пользователь по указанному _id не найден' });
       }
       return res.status(200).json(getUserId);
     })
@@ -46,7 +46,11 @@ const updateProfile = (req, res) => {
   user.findByIdAndUpdate(
     req.user._id,
     { name, about },
-    { new: true },
+    {
+      new: true,
+      runValidators: true,
+      upsert: true,
+    },
   )
     .then((updateUser) => {
       if (updateUser) {

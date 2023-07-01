@@ -15,7 +15,18 @@ app.use((req, res, next) => {
   req.user = {
     _id: '649ef313c28175064a1f4c59',
   };
+  next();
+});
 
+app.use((req, res, next) => {
+  const error = new Error('Страница не найдена');
+  error.status = 404;
+  next(error);
+});
+
+app.use((err, req, res, next) => {
+  res.status(err.status);
+  res.json({ message: err.message });
   next();
 });
 

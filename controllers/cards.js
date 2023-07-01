@@ -26,7 +26,7 @@ const deleteCard = (req, res) => {
   card.findByIdAndDelete(cardId)
     .then((deletedCard) => {
       if (!deletedCard) {
-        return res.status(404).send({ message: 'Карточка с указанным _id не найдена' });
+        return res.status(400).send({ message: 'Карточка с указанным _id не найдена' });
       }
 
       return res.status(200).json({ message: 'Карточка удалена' });
@@ -53,7 +53,7 @@ const likeCard = (req, res) => {
       if (getLikeCard) {
         res.status(200).json(getLikeCard);
       } else {
-        res.status(404).json({ message: 'Карточка с указанным _id не найдена' });
+        res.status(400).json({ message: 'Карточка с указанным _id не найдена' });
       }
     })
     .catch((err) => {
@@ -78,7 +78,7 @@ const dislikeCard = (req, res) => {
       if (getDislikeCard) {
         res.status(200).json(getDislikeCard);
       } else {
-        res.status(404).json({ message: 'Карточка с указанным _id не найдена' });
+        res.status(400).json({ message: 'Карточка с указанным _id не найдена' });
       }
     })
     .catch((err) => {
