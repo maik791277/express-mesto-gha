@@ -18,6 +18,9 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use('/users', usersRouter);
+app.use('/cards', cardsRouter);
+
 app.use((req, res, next) => {
   const error = new Error('Страница не найдена');
   error.status = 404;
@@ -29,8 +32,5 @@ app.use((err, req, res, next) => {
   res.json({ message: err.message });
   next();
 });
-
-app.use('/users', usersRouter);
-app.use('/cards', cardsRouter);
 
 app.listen(PORT);
