@@ -1,6 +1,7 @@
 const express = require('express');
+
 const router = express.Router();
-const usersController = require('../controllers/users')
+const usersController = require('../controllers/users');
 
 // Получить всех пользователей
 router.get('/', usersController.getUsers);
@@ -16,6 +17,5 @@ router.patch('/me', usersController.updateProfile);
 
 // Обновить аватар пользователя
 router.patch('/me/avatar', usersController.updateAvatar);
-
 
 module.exports = router;
