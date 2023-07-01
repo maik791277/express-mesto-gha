@@ -1,7 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const usersRouter = require('./routes/users');
-const cardsRouter = require('./routes/cards');
+const routes = require('./routes/index');
 
 const { PORT = 3000 } = process.env;
 
@@ -17,8 +16,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/users', usersRouter);
-app.use('/cards', cardsRouter);
+app.use('/', routes);
 
 app.use((req, res, next) => {
   const error = new Error('Страница не найдена');
@@ -27,8 +25,13 @@ app.use((req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
-  res.status(err.status);
-  res.json({ message: err.message });
+  if (err instanceof mongoose.Error) {
+    res.status(500).json({ message: 'Ошибка БД' });
+  } else if (err.status === 404) {
+    res.status(404).json({ message: 'Страница не найдена' });
+  } else {
+    res.status(err.status).json({ message: 'Произошла ошибка' });
+  }
   next();
 });
 

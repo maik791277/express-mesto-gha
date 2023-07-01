@@ -15,7 +15,7 @@ const getUsers = (req, res) => {
   user.find({})
     .then((users) => res.status(HTTP_STATUS_OK).json(users))
     .catch((err) => {
-      logger.error(`Error in getCards: ${err}`);
+      logger.error(`Error in getUsers: ${err}`);
       return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
     });
 };
@@ -35,7 +35,7 @@ const getUserById = (req, res) => {
       if (err.name === 'CastError') {
         return res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Передан несуществующий _id' });
       }
-      logger.error(`Error in getCards: ${err}`);
+      logger.error(`Error in getUserById: ${err}`);
       return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
     });
 };
@@ -50,7 +50,7 @@ const createUser = (req, res) => {
       if (err.name === 'ValidationError') {
         return res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя.' });
       }
-      logger.error(`Error in getCards: ${err}`);
+      logger.error(`Error in createUser: ${err}`);
       return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
     });
 };
@@ -74,11 +74,10 @@ const updateProfile = (req, res) => {
       }
     })
     .catch((err) => {
-      // тут может быть ошибка в github test
       if (err.name === 'ValidationError') {
         return res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя.' });
       }
-      logger.error(`Error in getCards: ${err}`);
+      logger.error(`Error in updateProfile: ${err}`);
       return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
     });
 };
@@ -105,7 +104,7 @@ const updateAvatar = (req, res) => {
       if (err.name === 'ValidationError') {
         return res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя.' });
       }
-      logger.error(`Error in getCards: ${err}`);
+      logger.error(`Error in updateAvatar: ${err}`);
       return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
     });
 };
