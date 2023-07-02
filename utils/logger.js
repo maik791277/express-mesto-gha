@@ -1,10 +1,13 @@
+const path = require('path');
+const fs = require('fs');
 const pino = require('pino');
 const prettifier = require('pino-pretty');
-const fs = require('fs');
 
+const logFilePath = path.join(__dirname, 'logs.log');
+const logStream = fs.createWriteStream(logFilePath, { flags: 'a' });
 const logger = pino({
-  level: 'info',
+  level: 'error',
   prettifier,
-}, fs.createWriteStream('logs.log', { flags: 'a' }));
+}, logStream);
 
 module.exports = logger;

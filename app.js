@@ -1,6 +1,12 @@
+const http2 = require('node:http2');
 const express = require('express');
 const mongoose = require('mongoose');
 const routes = require('./routes/index');
+
+const {
+  HTTP_STATUS_NOT_FOUND,
+  HTTP_STATUS_INTERNAL_SERVER_ERROR,
+} = http2.constants;
 
 const { PORT = 3000 } = process.env;
 
@@ -20,17 +26,17 @@ app.use('/', routes);
 
 app.use((req, res, next) => {
   const error = new Error('Страница не найдена');
-  error.status = 404;
+  error.status = HTTP_STATUS_NOT_FOUND;
   next(error);
 });
 
 app.use((err, req, res, next) => {
-  if (err instanceof mongoose.Error) {
-    res.status(500).json({ message: 'Ошибка БД' });
-  } else if (err.status === 404) {
-    res.status(404).json({ message: 'Страница не найдена' });
+  if (err instanceof mongoose.Error || err.name === 'MongoError' || err.name === 'ValidationError') {
+    res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Ошибка БД' });
+  } else if (err.status) {
+    res.status(err.status).json({ message: err.message });
   } else {
-    res.status(err.status).json({ message: 'Произошла ошибка' });
+    res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Произошла ошибка' });
   }
   next();
 });
