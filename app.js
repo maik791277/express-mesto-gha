@@ -39,11 +39,11 @@ app.post('/signup', celebrate({
   }),
 }), createUser);
 
+app.use(errors());
 app.use(cookieParser());
 app.use(authMiddleware);
 app.use('/', routes);
 app.use(errorMiddleware);
-app.use(errors());
 
 app.use((req, res, next) => {
   const error = new Error('Страница не найдена');
