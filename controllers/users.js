@@ -1,61 +1,44 @@
 const http2 = require('node:http2');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const user = require('../models/user');
-const logger = require('../utils/logger');
 
 const {
   HTTP_STATUS_OK,
   HTTP_STATUS_CREATED,
   HTTP_STATUS_NOT_FOUND,
-  HTTP_STATUS_INTERNAL_SERVER_ERROR,
-  HTTP_STATUS_BAD_REQUEST,
+  HTTP_STATUS_UNAUTHORIZED,
 } = http2.constants;
 
 // Получить всех пользователей
-const getUsers = (req, res) => {
+const getUsers = (req, res, next) => {
   user.find({})
     .then((users) => res.status(HTTP_STATUS_OK).json(users))
     .catch((err) => {
-      logger.error(`Error in getUsers: ${err}`);
-      return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
-    });
-};
-
-// Получить пользователя по _id
-const getUserById = (req, res) => {
-  const { userId } = req.params;
-
-  user.findById(userId)
-    .then((getUserId) => {
-      if (!getUserId) {
-        return res.status(HTTP_STATUS_NOT_FOUND).json({ message: 'Пользователь по указанному _id не найден' });
-      }
-      return res.status(HTTP_STATUS_OK).json(getUserId);
-    })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        return res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Передан несуществующий _id' });
-      }
-      logger.error(`Error in getUserById: ${err}`);
-      return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+      next(err);
     });
 };
 
 // Создать пользователя
-const createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-
-  user.create({ name, about, avatar })
+const createUser = (req, res, next) => {
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
+  bcrypt.hash(password, 10)
+    .then((hash) => user.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    }))
     .then((addUser) => res.status(HTTP_STATUS_CREATED).json(addUser))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя.' });
-      }
-      logger.error(`Error in createUser: ${err}`);
-      return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+      next(err);
     });
 };
 
-const updateProfile = (req, res) => {
+const updateProfile = (req, res, next) => {
   const { name, about } = req.body;
 
   user.findByIdAndUpdate(
@@ -70,21 +53,16 @@ const updateProfile = (req, res) => {
       if (updateUser) {
         res.status(HTTP_STATUS_OK).json(updateUser);
       } else {
-        res.status(HTTP_STATUS_NOT_FOUND).json({ message: 'Пользователь с указанным _id не найден' });
+        res.status(HTTP_STATUS_NOT_FOUND).json({ message: 'Пользователь с указанным _id не найден.' });
       }
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя.' });
-      }
-      logger.error(`Error in updateProfile: ${err}`);
-      return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+      next(err);
     });
 };
 
-const updateAvatar = (req, res) => {
+const updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
-
   user.findByIdAndUpdate(
     req.user._id,
     { avatar },
@@ -101,14 +79,52 @@ const updateAvatar = (req, res) => {
       }
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя.' });
+      next(err);
+    });
+};
+
+const getUserInfo = (req, res, next) => {
+  const userId = req.user._id;
+
+  user.findById(userId)
+    .then((getUserId) => {
+      if (!getUserId) {
+        return res.status(HTTP_STATUS_NOT_FOUND).json({ message: 'Пользователь по указанному _id не найден' });
       }
-      logger.error(`Error in updateAvatar: ${err}`);
-      return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+      return res.status(HTTP_STATUS_OK).json(getUserId);
+    })
+    .catch((err) => {
+      next(err);
+    });
+};
+
+const login = (req, res, next) => {
+  const { email, password } = req.body;
+
+  user.findOne({ email }).select('+password')
+    .then((users) => {
+      if (!users) {
+        return res.status(HTTP_STATUS_UNAUTHORIZED).json({ message: 'Неправильная почта или пароль' });
+      }
+
+      return bcrypt.compare(password, users.password)
+        .then((matched) => {
+          if (!matched) {
+            return res.status(HTTP_STATUS_UNAUTHORIZED).json({ message: 'Неправильная почта или пароль' });
+          }
+
+          const tokenPayload = { _id: users._id };
+          const token = jwt.sign(tokenPayload, 'super-strong-secret', { expiresIn: '7d' });
+          res.cookie('token', token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
+
+          return res.status(HTTP_STATUS_OK).json({ message: 'Успешный вход' });
+        });
+    })
+    .catch((err) => {
+      next(err);
     });
 };
 
 module.exports = {
-  getUsers, getUserById, createUser, updateProfile, updateAvatar,
+  getUsers, createUser, updateProfile, updateAvatar, getUserInfo, login,
 };

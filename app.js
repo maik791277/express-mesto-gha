@@ -1,7 +1,14 @@
 const http2 = require('node:http2');
 const express = require('express');
 const mongoose = require('mongoose');
+const { celebrate, Joi } = require('celebrate');
+const { errors } = require('celebrate');
+const cookieParser = require('cookie-parser');
 const routes = require('./routes/index');
+const { createUser, login } = require('./controllers/users');
+const authMiddleware = require('./middlewares/auth');
+const errorMiddleware = require('./middlewares/error');
+const logger = require('./utils/logger');
 
 const {
   HTTP_STATUS_NOT_FOUND,
@@ -15,14 +22,28 @@ app.use(express.json());
 
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb', { useUnifiedTopology: true });
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '649ef313c28175064a1f4c59',
-  };
-  next();
-});
+app.post('/signin', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(8),
+  }),
+}), login);
 
+app.post('/signup', celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().min(2).max(30).optional(),
+    about: Joi.string().min(2).max(30).optional(),
+    avatar: Joi.string().uri().optional(),
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(8),
+  }),
+}), createUser);
+
+app.use(cookieParser());
+app.use(authMiddleware);
 app.use('/', routes);
+app.use(errorMiddleware);
+app.use(errors());
 
 app.use((req, res, next) => {
   const error = new Error('Страница не найдена');
@@ -31,12 +52,11 @@ app.use((req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
-  if (err instanceof mongoose.Error || err.name === 'MongoError' || err.name === 'ValidationError') {
-    res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Ошибка БД' });
-  } else if (err.status) {
+  if (err.status) {
     res.status(err.status).json({ message: err.message });
   } else {
-    res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ message: 'Произошла ошибка' });
+    logger.error(`Error in updateProfile: ${err}`);
+    res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
   }
   next();
 });

@@ -7,10 +7,9 @@ const usersController = require('../controllers/users');
 router.get('/', usersController.getUsers);
 
 // Получить пользователя по _id
-router.get('/:userId', usersController.getUserById);
+// router.get('/:userId', usersController.getUserById);
 
-// Создать пользователя
-router.post('/', usersController.createUser);
+router.get('/me', usersController.getUserInfo);
 
 // Обновления профиля пользовтеля
 router.patch('/me', usersController.updateProfile);

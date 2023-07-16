@@ -1,61 +1,62 @@
 const http2 = require('node:http2');
 const card = require('../models/card');
-const logger = require('../utils/logger');
 
 const {
   HTTP_STATUS_OK,
   HTTP_STATUS_CREATED,
   HTTP_STATUS_NOT_FOUND,
-  HTTP_STATUS_INTERNAL_SERVER_ERROR,
-  HTTP_STATUS_BAD_REQUEST,
+  HTTP_STATUS_UNAUTHORIZED,
 } = http2.constants;
 
-const getCards = (req, res) => {
+const getCards = (req, res, next) => {
   card.find({})
     .then((cards) => res.status(HTTP_STATUS_OK).json(cards))
     .catch((err) => {
-      logger.error(`Error in getCards: ${err}`);
-      return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+      next(err);
     });
 };
 
-const createCard = (req, res) => {
+const createCard = (req, res, next) => {
   const { name, link } = req.body;
   const owner = req.user._id;
 
   card.create({ name, link, owner })
     .then((addCard) => res.status(HTTP_STATUS_CREATED).json(addCard))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании' });
-      }
-      logger.error(`Error in createCard: ${err}`);
-      return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+      next(err);
     });
 };
 
-const deleteCard = (req, res) => {
+const deleteCard = (req, res, next) => {
   const { cardId } = req.params;
+  const userId = req.user._id;
 
-  card.findByIdAndDelete(cardId)
-    .then((deletedCard) => {
-      if (!deletedCard) {
-        return res.status(HTTP_STATUS_NOT_FOUND).send({ message: 'Карточка с указанным _id не найдена' });
+  card.findById(cardId)
+    .then((foundCard) => {
+      if (!foundCard) {
+        return res.status(HTTP_STATUS_NOT_FOUND).json({ message: 'Карточка с указанным _id не найдена' });
       }
 
-      return res.status(HTTP_STATUS_OK).json({ message: 'Карточка удалена' });
+      if (foundCard.owner.toString() !== userId) {
+        return res.status(HTTP_STATUS_UNAUTHORIZED).json({ message: 'Вы не можете удалить чужую карточку' });
+      }
+
+      return card.findByIdAndDelete(cardId)
+        .then((deletedCard) => {
+          if (!deletedCard) {
+            return res.status(HTTP_STATUS_NOT_FOUND).json({ message: 'Карточка с указанным _id не найдена' });
+          }
+
+          return res.status(HTTP_STATUS_OK).json({ message: 'Карточка удалена' });
+        });
     })
     .catch((err) => {
-      if (err.name === 'CastError') {
-        return res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Передан несуществующий _id карточки' });
-      }
-      logger.error(`Error in deleteCard: ${err}`);
-      return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+      next(err);
     });
 };
 
 // Поставить лайк карточке
-const likeCard = (req, res) => {
+const likeCard = (req, res, next) => {
   card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } },
@@ -69,16 +70,12 @@ const likeCard = (req, res) => {
       }
     })
     .catch((err) => {
-      if (err.name === 'CastError') {
-        return res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Передан несуществующий _id карточки' });
-      }
-      logger.error(`Error in likeCard: ${err}`);
-      return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+      next(err);
     });
 };
 
 // Убрать лайк с карточки
-const dislikeCard = (req, res) => {
+const dislikeCard = (req, res, next) => {
   card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } },
@@ -92,11 +89,7 @@ const dislikeCard = (req, res) => {
       }
     })
     .catch((err) => {
-      if (err.name === 'CastError') {
-        return res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Передан несуществующий _id карточки' });
-      }
-      logger.error(`Error in dislikeCard: ${err}`);
-      return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+      next(err);
     });
 };
 
