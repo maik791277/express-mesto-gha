@@ -19,6 +19,21 @@ const getUsers = (req, res, next) => {
     });
 };
 
+const getUserById = (req, res, next) => {
+  const { userId } = req.params;
+
+  user.findById(userId)
+    .then((getUserId) => {
+      if (!getUserId) {
+        return res.status(HTTP_STATUS_NOT_FOUND).json({ message: 'Пользователь по указанному _id не найден' });
+      }
+      return res.status(HTTP_STATUS_OK).json(getUserId);
+    })
+    .catch((err) => {
+      next(err);
+    });
+};
+
 // Создать пользователя
 const createUser = (req, res, next) => {
   const {
@@ -136,5 +151,5 @@ const login = (req, res, next) => {
 };
 
 module.exports = {
-  getUsers, createUser, updateProfile, updateAvatar, getUserInfo, login,
+  getUsers, createUser, updateProfile, updateAvatar, getUserInfo, login, getUserById,
 };
