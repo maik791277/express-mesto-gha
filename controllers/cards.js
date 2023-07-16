@@ -34,21 +34,26 @@ const deleteCard = (req, res, next) => {
   card.findById(cardId)
     .then((foundCard) => {
       if (!foundCard) {
-        return res.status(HTTP_STATUS_NOT_FOUND).json({ message: 'Карточка с указанным _id не найдена' });
+        const error = new Error('Карточка с указанным _id не найдена');
+        error.status = HTTP_STATUS_NOT_FOUND;
+        throw error;
       }
 
       if (foundCard.owner.toString() !== userId) {
-        return res.status(HTTP_STATUS_FORBIDDEN).json({ message: 'Вы не можете удалить чужую карточку' });
+        const error = new Error('Вы не можете удалить чужую карточку');
+        error.status = HTTP_STATUS_FORBIDDEN;
+        throw error;
+      }
+      return card.deleteOne({ _id: cardId });
+    })
+    .then((deletedCard) => {
+      if (!deletedCard) {
+        const error = new Error('Карточка с указанным _id не найдена');
+        error.status = HTTP_STATUS_NOT_FOUND;
+        throw error;
       }
 
-      return card.findByIdAndDelete(cardId)
-        .then((deletedCard) => {
-          if (!deletedCard) {
-            return res.status(HTTP_STATUS_NOT_FOUND).json({ message: 'Карточка с указанным _id не найдена' });
-          }
-
-          return res.status(HTTP_STATUS_OK).json({ message: 'Карточка удалена' });
-        });
+      return res.status(HTTP_STATUS_OK).json({ message: 'Карточка удалена' });
     })
     .catch((err) => {
       next(err);
@@ -66,7 +71,9 @@ const likeCard = (req, res, next) => {
       if (getLikeCard) {
         res.status(HTTP_STATUS_OK).json(getLikeCard);
       } else {
-        res.status(HTTP_STATUS_NOT_FOUND).json({ message: 'Карточка с указанным _id не найдена' });
+        const error = new Error('Карточка с указанным _id не найдена');
+        error.status = HTTP_STATUS_NOT_FOUND;
+        throw error;
       }
     })
     .catch((err) => {
@@ -85,7 +92,9 @@ const dislikeCard = (req, res, next) => {
       if (getDislikeCard) {
         res.status(HTTP_STATUS_OK).json(getDislikeCard);
       } else {
-        res.status(HTTP_STATUS_NOT_FOUND).json({ message: 'Карточка с указанным _id не найдена' });
+        const error = new Error('Карточка с указанным _id не найдена');
+        error.status = HTTP_STATUS_NOT_FOUND;
+        throw error;
       }
     })
     .catch((err) => {

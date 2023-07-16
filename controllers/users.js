@@ -25,7 +25,9 @@ const getUserById = (req, res, next) => {
   user.findById(userId)
     .then((getUserId) => {
       if (!getUserId) {
-        return res.status(HTTP_STATUS_NOT_FOUND).json({ message: 'Пользователь по указанному _id не найден' });
+        const error = new Error('Пользователь по указанному _id не найден');
+        error.status = HTTP_STATUS_NOT_FOUND;
+        throw error;
       }
       return res.status(HTTP_STATUS_OK).json(getUserId);
     })
@@ -78,7 +80,9 @@ const updateProfile = (req, res, next) => {
       if (updateUser) {
         res.status(HTTP_STATUS_OK).json(updateUser);
       } else {
-        res.status(HTTP_STATUS_NOT_FOUND).json({ message: 'Пользователь с указанным _id не найден.' });
+        const error = new Error('Пользователь по указанному _id не найден');
+        error.status = HTTP_STATUS_NOT_FOUND;
+        throw error;
       }
     })
     .catch((err) => {
@@ -100,7 +104,9 @@ const updateAvatar = (req, res, next) => {
       if (updateAvatarUser) {
         res.status(HTTP_STATUS_OK).json(updateAvatarUser);
       } else {
-        res.status(HTTP_STATUS_NOT_FOUND).json({ message: 'Пользователь с указанным _id не найден.' });
+        const error = new Error('Пользователь по указанному _id не найден');
+        error.status = HTTP_STATUS_NOT_FOUND;
+        throw error;
       }
     })
     .catch((err) => {
@@ -114,7 +120,9 @@ const getUserInfo = (req, res, next) => {
   user.findById(userId)
     .then((getUserId) => {
       if (!getUserId) {
-        return res.status(HTTP_STATUS_NOT_FOUND).json({ message: 'Пользователь по указанному _id не найден' });
+        const error = new Error('Пользователь по указанному _id не найден');
+        error.status = HTTP_STATUS_NOT_FOUND;
+        throw error;
       }
       return res.status(HTTP_STATUS_OK).json(getUserId);
     })
@@ -129,13 +137,17 @@ const login = (req, res, next) => {
   user.findOne({ email }).select('+password')
     .then((users) => {
       if (!users) {
-        return res.status(HTTP_STATUS_UNAUTHORIZED).json({ message: 'Неправильная почта или пароль' });
+        const error = new Error('Неправильная почта или пароль');
+        error.status = HTTP_STATUS_UNAUTHORIZED;
+        throw error;
       }
 
       return bcrypt.compare(password, users.password)
         .then((matched) => {
           if (!matched) {
-            return res.status(HTTP_STATUS_UNAUTHORIZED).json({ message: 'Неправильная почта или пароль' });
+            const error = new Error('Неправильная почта или пароль');
+            error.status = HTTP_STATUS_UNAUTHORIZED;
+            throw error;
           }
 
           const tokenPayload = { _id: users._id };

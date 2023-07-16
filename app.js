@@ -1,14 +1,14 @@
 const http2 = require('node:http2');
-const express = require('express');
 const mongoose = require('mongoose');
 const { celebrate, Joi } = require('celebrate');
 const { errors } = require('celebrate');
+const express = require('express');
 const cookieParser = require('cookie-parser');
-const routes = require('./routes/index');
 const { createUser, login } = require('./controllers/users');
-const authMiddleware = require('./middlewares/auth');
-const errorMiddleware = require('./middlewares/error');
 const logger = require('./utils/logger');
+const authMiddleware = require('./middlewares/auth');
+const { errorHandler, errorMiddleware } = require('./middlewares/error');
+const routes = require('./routes');
 
 const {
   HTTP_STATUS_NOT_FOUND,
@@ -36,20 +36,20 @@ app.post('/signup', celebrate({
     avatar: Joi.string().uri().regex(/^(https?:\/\/)?(www\.)?[-a-zA-Z0-9._~:/?#[\]@!$&'()*+,;=]+#?$/).optional(),
     email: Joi.string().required().email(),
     password: Joi.string().required().min(8),
-  }).unknown(true),
+  }),
 }), createUser);
 
 app.use(cookieParser());
 app.use(authMiddleware);
 app.use('/', routes);
 app.use(errors());
-app.use(errorMiddleware);
-
 app.use((req, res, next) => {
   const error = new Error('Страница не найдена');
   error.status = HTTP_STATUS_NOT_FOUND;
   next(error);
 });
+app.use(errorMiddleware);
+app.use(errorHandler);
 
 app.use((err, req, res, next) => {
   if (err.status) {

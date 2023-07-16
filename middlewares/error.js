@@ -1,5 +1,4 @@
 const http2 = require('node:http2');
-const logger = require('../utils/logger');
 
 const {
   HTTP_STATUS_INTERNAL_SERVER_ERROR,
@@ -7,6 +6,12 @@ const {
   HTTP_STATUS_UNAUTHORIZED,
   HTTP_STATUS_CONFLICT,
 } = http2.constants;
+
+const errorHandler = (err, req, res) => {
+  const status = err.status || HTTP_STATUS_INTERNAL_SERVER_ERROR;
+  const message = err.message || 'Что-то пошло не так';
+  res.status(status).json({ message });
+};
 
 const errorMiddleware = (err, req, res, next) => {
   if (err.code === 11000) {
@@ -25,8 +30,9 @@ const errorMiddleware = (err, req, res, next) => {
     return res.status(HTTP_STATUS_BAD_REQUEST).send({ message: 'Передан несуществующий _id карточки' });
   }
 
-  logger.error(`Error in updateProfile: ${err}`);
-  return res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+  return next(err);
 };
 
-module.exports = errorMiddleware;
+module.exports = {
+  errorHandler, errorMiddleware,
+};

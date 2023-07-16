@@ -3,8 +3,10 @@ const http2 = require('node:http2');
 
 const { HTTP_STATUS_UNAUTHORIZED } = http2.constants;
 
-const handleAuthError = (res) => {
-  res.status(HTTP_STATUS_UNAUTHORIZED).send({ message: 'Необходима авторизация' });
+const handleAuthError = () => {
+  const error = new Error('Необходима авторизация');
+  error.status = HTTP_STATUS_UNAUTHORIZED;
+  throw error;
 };
 
 module.exports = (req, res, next) => {
