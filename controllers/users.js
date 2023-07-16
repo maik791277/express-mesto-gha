@@ -32,7 +32,17 @@ const createUser = (req, res, next) => {
       email,
       password: hash,
     }))
-    .then((addUser) => res.status(HTTP_STATUS_CREATED).json(addUser))
+    .then((addUser) => {
+      // Исключаем поле "password" из ответа
+      const userWithoutPassword = {
+        _id: addUser._id,
+        name: addUser.name,
+        about: addUser.about,
+        avatar: addUser.avatar,
+        email: addUser.email,
+      };
+      res.status(HTTP_STATUS_CREATED).json(userWithoutPassword);
+    })
     .catch((err) => {
       next(err);
     });
