@@ -6,10 +6,10 @@ const usersController = require('../controllers/users');
 // Получить всех пользователей
 router.get('/', usersController.getUsers);
 
+router.get('/me', usersController.getUserInfo);
+
 // Получить пользователя по _id
 router.get('/:userId', usersController.getUserById);
-
-router.get('/me', usersController.getUserInfo);
 
 // Обновления профиля пользовтеля
 router.patch('/me', usersController.updateProfile);

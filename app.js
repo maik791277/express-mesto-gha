@@ -36,7 +36,7 @@ app.post('/signup', celebrate({
     avatar: Joi.string().uri().regex(/^(https?:\/\/)?(www\.)?[-a-zA-Z0-9._~:/?#[\]@!$&'()*+,;=]+#?$/).optional(),
     email: Joi.string().required().email(),
     password: Joi.string().required().min(8),
-  }),
+  }).unknown(true),
 }), createUser);
 
 app.use(cookieParser());

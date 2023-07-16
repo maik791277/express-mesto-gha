@@ -5,7 +5,7 @@ const {
   HTTP_STATUS_OK,
   HTTP_STATUS_CREATED,
   HTTP_STATUS_NOT_FOUND,
-  HTTP_STATUS_UNAUTHORIZED,
+  HTTP_STATUS_FORBIDDEN
 } = http2.constants;
 
 const getCards = (req, res, next) => {
@@ -38,7 +38,7 @@ const deleteCard = (req, res, next) => {
       }
 
       if (foundCard.owner.toString() !== userId) {
-        return res.status(HTTP_STATUS_UNAUTHORIZED).json({ message: 'Вы не можете удалить чужую карточку' });
+        return res.status(HTTP_STATUS_FORBIDDEN).json({ message: 'Вы не можете удалить чужую карточку' });
       }
 
       return card.findByIdAndDelete(cardId)
@@ -48,7 +48,7 @@ const deleteCard = (req, res, next) => {
           }
 
           return res.status(HTTP_STATUS_OK).json({ message: 'Карточка удалена' });
-        });
+        })
     })
     .catch((err) => {
       next(err);
