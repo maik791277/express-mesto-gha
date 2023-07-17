@@ -1,5 +1,6 @@
 const http2 = require('node:http2');
 const card = require('../models/card');
+const { ClientError } = require('../class/ClientError');
 
 const {
   HTTP_STATUS_OK,
@@ -34,23 +35,17 @@ const deleteCard = (req, res, next) => {
   card.findById(cardId)
     .then((foundCard) => {
       if (!foundCard) {
-        const error = new Error('Карточка с указанным _id не найдена');
-        error.status = HTTP_STATUS_NOT_FOUND;
-        throw error;
+        throw new ClientError('Карточка с указанным _id не найдена', HTTP_STATUS_NOT_FOUND);
       }
 
       if (foundCard.owner.toString() !== userId) {
-        const error = new Error('Вы не можете удалить чужую карточку');
-        error.status = HTTP_STATUS_FORBIDDEN;
-        throw error;
+        throw new ClientError('Вы не можете удалить чужую карточку', HTTP_STATUS_FORBIDDEN);
       }
       return card.deleteOne({ _id: cardId });
     })
     .then((deletedCard) => {
       if (!deletedCard) {
-        const error = new Error('Карточка с указанным _id не найдена');
-        error.status = HTTP_STATUS_NOT_FOUND;
-        throw error;
+        throw new ClientError('Карточка с указанным _id не найдена', HTTP_STATUS_NOT_FOUND);
       }
 
       return res.status(HTTP_STATUS_OK).json({ message: 'Карточка удалена' });
@@ -71,9 +66,7 @@ const likeCard = (req, res, next) => {
       if (getLikeCard) {
         res.status(HTTP_STATUS_OK).json(getLikeCard);
       } else {
-        const error = new Error('Карточка с указанным _id не найдена');
-        error.status = HTTP_STATUS_NOT_FOUND;
-        throw error;
+        throw new ClientError('Карточка с указанным _id не найдена', HTTP_STATUS_NOT_FOUND);
       }
     })
     .catch((err) => {
@@ -92,9 +85,7 @@ const dislikeCard = (req, res, next) => {
       if (getDislikeCard) {
         res.status(HTTP_STATUS_OK).json(getDislikeCard);
       } else {
-        const error = new Error('Карточка с указанным _id не найдена');
-        error.status = HTTP_STATUS_NOT_FOUND;
-        throw error;
+        throw new ClientError('Карточка с указанным _id не найдена', HTTP_STATUS_NOT_FOUND);
       }
     })
     .catch((err) => {

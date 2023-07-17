@@ -1,25 +1,20 @@
 const jwt = require('jsonwebtoken');
 const http2 = require('node:http2');
+const { ClientError } = require('../class/ClientError');
 
 const { HTTP_STATUS_UNAUTHORIZED } = http2.constants;
-
-const handleAuthError = () => {
-  const error = new Error('Необходима авторизация');
-  error.status = HTTP_STATUS_UNAUTHORIZED;
-  throw error;
-};
 
 module.exports = (req, res, next) => {
   const { token } = req.cookies;
   let payload;
 
   if (!token) {
-    return handleAuthError(res);
+    return next(new ClientError('Необходима авторизация', HTTP_STATUS_UNAUTHORIZED));
   }
   try {
     payload = jwt.verify(token, 'super-strong-secret');
   } catch (err) {
-    return handleAuthError(res);
+    return next(new ClientError('Необходима авторизация', HTTP_STATUS_UNAUTHORIZED));
   }
 
   req.user = payload;

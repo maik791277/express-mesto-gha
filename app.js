@@ -5,14 +5,13 @@ const { errors } = require('celebrate');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const { createUser, login } = require('./controllers/users');
-const logger = require('./utils/logger');
 const authMiddleware = require('./middlewares/auth');
-const { errorHandler, errorMiddleware } = require('./middlewares/error');
+const { errorMiddleware } = require('./middlewares/error');
 const routes = require('./routes');
+const { ClientError } = require('./class/ClientError');
 
 const {
   HTTP_STATUS_NOT_FOUND,
-  HTTP_STATUS_INTERNAL_SERVER_ERROR,
 } = http2.constants;
 
 const { PORT = 3000 } = process.env;
@@ -43,22 +42,7 @@ app.use(cookieParser());
 app.use(authMiddleware);
 app.use('/', routes);
 app.use(errors());
-app.use((req, res, next) => {
-  const error = new Error('Страница не найдена');
-  error.status = HTTP_STATUS_NOT_FOUND;
-  next(error);
-});
+app.use((req, res, next) => next(new ClientError('Страница не найдена', HTTP_STATUS_NOT_FOUND)));
 app.use(errorMiddleware);
-app.use(errorHandler);
-
-app.use((err, req, res, next) => {
-  if (err.status) {
-    res.status(err.status).json({ message: err.message });
-  } else {
-    logger.error(`Error in updateProfile: ${err}`);
-    res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
-  }
-  next();
-});
 
 app.listen(PORT);
